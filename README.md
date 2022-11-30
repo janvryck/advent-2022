@@ -1,4 +1,6 @@
-# Advent of Code 2021
+# Advent of Code 2022
+
+![aoc-workflow](https://github.com/janvryck/advent-2022/actions/workflows/main.yml/badge.svg)
 
 ## Set-up
 
