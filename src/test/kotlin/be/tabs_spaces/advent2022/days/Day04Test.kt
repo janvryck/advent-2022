@@ -8,11 +8,11 @@ class Day04Test {
 
     @Test
     fun partOne() {
-        assertThat(day04.partOne()).isEqualTo(-1)
+        assertThat(day04.partOne()).isEqualTo(2)
     }
 
     @Test
     fun partTwo() {
-        assertThat(day04.partTwo()).isEqualTo(-1)
+        assertThat(day04.partTwo()).isEqualTo(4)
     }
 }
