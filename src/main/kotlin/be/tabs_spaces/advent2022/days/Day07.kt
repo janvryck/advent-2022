@@ -1,22 +1,28 @@
 package be.tabs_spaces.advent2022.days
 
+private const val TOTAL_DISK_SPACE = 70_000_000
+private const val REQUIRED_DISK_SPACE = 30_000_000
+
 class Day07 : Day(7) {
 
     private val fileSystem = parseShell(inputString)
 
-    override fun partOne(): Any {
-        return -1
-    }
+    override fun partOne() = (listOf(fileSystem) + fileSystem.nestedDirectories())
+        .filter { it.totalSize() < 100_000 }
+        .sumOf { it.totalSize() }
 
-    override fun partTwo(): Any {
-        return -1
-    }
+    override fun partTwo() = (REQUIRED_DISK_SPACE - (TOTAL_DISK_SPACE - fileSystem.totalSize()))
+        .let { minimalSpaceToFree ->
+            fileSystem.nestedDirectories()
+                .filter { it.totalSize() >= minimalSpaceToFree }
+                .minBy { it.totalSize() }
+                .totalSize()
+        }
 
-    private fun parseShell(shellOutput: String): FileSystem {
-        val shell = Shell()
+    private fun parseShell(shellOutput: String) = with(Shell()) {
         shellOutput.toCommands()
-            .forEach { (command, output) -> shell.parseCommand(command, output) }
-        return shell.fs.also { println(it) }
+            .forEach { (command, output) -> parseCommand(command, output) }
+        fs
     }
 
     private fun String.toCommands() = split("\n$ ")
@@ -85,6 +91,10 @@ class Day07 : Day(7) {
         fun addFile(name: String, meta: String) {
             files.add(File(name, meta.toInt()))
         }
+
+        open fun nestedDirectories(): List<Directory> = dirs + dirs.flatMap { it.nestedDirectories() }
+
+        fun totalSize(): Int = files.sumOf { it.size } + dirs.sumOf { it.totalSize() }
     }
 
     data class File(
