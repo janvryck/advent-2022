@@ -5,7 +5,7 @@ private const val REQUIRED_DISK_SPACE = 30_000_000
 
 class Day07 : Day(7) {
 
-    private val fileSystem = parseShell(inputString)
+    private val fileSystem = Shell.apply { restoreFrom(inputString) }.fs
 
     override fun partOne() = (listOf(fileSystem) + fileSystem.nestedDirectories())
         .filter { it.totalSize() < 100_000 }
@@ -19,22 +19,22 @@ class Day07 : Day(7) {
                 .totalSize()
         }
 
-    private fun parseShell(shellOutput: String) = with(Shell()) {
-        shellOutput.toCommands()
-            .forEach { (command, output) -> parseCommand(command, output) }
-        fs
-    }
-
-    private fun String.toCommands() = split("\n$ ")
-        .map { it.lines() }
-        .map {
-            ShellCommand(it.first(), it.drop(1))
-        }.drop(1)   // Drop `cd /`
-
-    class Shell(val fs: FileSystem = FileSystem()) {
+    object Shell {
+        val fs: FileSystem = FileSystem()
         private var currentDirectory: Directory = fs
 
-        fun parseCommand(command: String, output: List<String>) {
+        fun restoreFrom(output: String) {
+            output.toCommands()
+                .forEach { (command, output) -> parseCommand(command, output) }
+        }
+
+        private fun String.toCommands() = split("\n$ ")
+            .map { it.lines() }
+            .map {
+                ShellCommand(it.first(), it.drop(1))
+            }.drop(1)   // Drop `cd /`
+
+        private fun parseCommand(command: String, output: List<String>) {
             when {
                 command == "ls" -> parseListing(output)
                 command.startsWith("cd ") -> changeDirectory(command.substringAfter("cd "))
@@ -63,12 +63,12 @@ class Day07 : Day(7) {
         private fun moveUp() = currentDirectory.parent ?: throw IllegalArgumentException("Can not move up from root")
 
         private fun moveDown(destination: String) = currentDirectory.findDirectory(destination)
-    }
 
-    data class ShellCommand(
-        val command: String,
-        val output: List<String>,
-    )
+        data class ShellCommand(
+            val command: String,
+            val output: List<String>,
+        )
+    }
 
     class FileSystem : Directory("/")
 
@@ -76,8 +76,8 @@ class Day07 : Day(7) {
         val name: String,
         val parent: Directory? = null
     ) {
-        val dirs: MutableList<Directory> = mutableListOf()
-        val files: MutableList<File> = mutableListOf()
+        private val dirs = mutableListOf<Directory>()
+        private val files = mutableListOf<File>()
 
         fun findDirectory(destination: String) = dirs
             .firstOrNull {
@@ -92,7 +92,7 @@ class Day07 : Day(7) {
             files.add(File(name, meta.toInt()))
         }
 
-        open fun nestedDirectories(): List<Directory> = dirs + dirs.flatMap { it.nestedDirectories() }
+        fun nestedDirectories(): List<Directory> = dirs + dirs.flatMap { it.nestedDirectories() }
 
         fun totalSize(): Int = files.sumOf { it.size } + dirs.sumOf { it.totalSize() }
     }
