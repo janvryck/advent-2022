@@ -1,0 +1,65 @@
+package be.tabs_spaces.advent2022.days
+
+import kotlin.math.abs
+import kotlin.math.sign
+
+class Day09 : Day(9) {
+
+    private val bridgeMovements = inputList
+        .map { it.split(" ") }
+        .map { (d, r) -> Direction.fromURDL(d) to r.toInt() }
+
+    override fun partOne() = Bridge(bridgeMovements).simulateRope(2)
+
+    override fun partTwo() = Bridge(bridgeMovements).simulateRope(10)
+
+    class Bridge(private val movements: List<Pair<Direction, Int>>) {
+
+        fun simulateRope(numberOfKnots: Int) = with(mutableSetOf<Point>()) {
+            val rope = MutableList(numberOfKnots) { Point() }
+            movements.forEach { (direction, times) ->
+                repeat(times) {
+                    rope[0] = rope[0].move(direction)
+                    rope.indices.zipWithNext().forEach { (head, tail) ->
+                        if (!rope[tail].neighbours(rope[head])) {
+                            rope[tail] = rope[tail].moveTowards(rope[head])
+                        }
+                    }
+                    add(rope.last())
+                }
+            }
+            size
+        }
+    }
+}
+
+data class Point(
+    val x: Int = 0,
+    val y: Int = 0
+) {
+    fun move(direction: Direction) = move(direction.dX, direction.dY)
+
+    fun moveTowards(to: Point) = move((to.x - x).sign, (to.y - y).sign)
+
+    private fun move(dX: Int, dY: Int) = Point(x + dX, y + dY)
+
+    fun neighbours(other: Point) = abs(other.x - x) <= 1 && abs(other.y - y) <= 1
+}
+
+enum class Direction(val dX: Int, val dY: Int) {
+    NORTH(0, 1),
+    EAST(1, 0),
+    SOUTH(0, -1),
+    WEST(-1, 0)
+    ;
+
+    companion object {
+        fun fromURDL(dir: String) = when (dir) {
+            "U" -> NORTH
+            "R" -> EAST
+            "D" -> SOUTH
+            "L" -> WEST
+            else -> throw IllegalArgumentException("Only U, R, D and L are supported, provided: '$dir'.")
+        }
+    }
+}
