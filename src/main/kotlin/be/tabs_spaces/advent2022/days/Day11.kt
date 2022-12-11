@@ -1,31 +1,29 @@
 package be.tabs_spaces.advent2022.days
 
 import be.tabs_spaces.advent2022.days.Day11.Monkey.Companion.parse
+import be.tabs_spaces.advent2022.util.lowestCommonMultiple
 
 class Day11 : Day(11) {
 
-    override fun partOne(): Any {
-        val monkeys: List<Monkey> = inputString
+    private val monkeys
+        get() = inputString
             .split("\n\n")
             .map { parse(it) }
-        repeat(20) { monkeys.runTurn { it / 3 } }
-        return monkeys.map { it.inspections }
-            .sortedDescending()
-            .take(2)
-            .let { (first, second) -> first * second }
-    }
 
-    override fun partTwo(): Any {
-        val monkeys: List<Monkey> = inputString
-            .split("\n\n")
-            .map { parse(it) }
-        val lowestCommonDenominator = monkeys.map { it.divisor }.reduce { lcm, divisor -> lowestCommonMultiple(divisor, lcm) }
-        repeat(10_000) { monkeys.runTurn { it % lowestCommonDenominator } }
-        return monkeys.map { it.inspections }
-            .sortedDescending()
-            .take(2)
-            .let { (first, second) -> first * second }
-    }
+    override fun partOne() = monkeys.runTurns(20) { it / 3 }
+
+    override fun partTwo() = monkeys.runTurns(10_000) { it % monkeys.LCM() }
+
+    private fun List<Monkey>.LCM() = map { it.divisor }.reduce { lcm, divisor -> lowestCommonMultiple(divisor, lcm) }
+
+    private fun List<Monkey>.runTurns(
+        times: Int,
+        worryModifier: (Long) -> Long
+    ) = apply { repeat(times) { runTurn(worryModifier) } }
+        .map { it.inspections }
+        .sortedDescending()
+        .take(2)
+        .let { (first, second) -> first * second }
 
     private fun List<Monkey>.runTurn(worryModifier: (Long) -> Long) {
         forEach { monkey ->
@@ -35,7 +33,7 @@ class Day11 : Day(11) {
     }
 
     class Monkey(
-        val items: MutableList<Long>,
+        private val items: MutableList<Long>,
         private val operation: (Long) -> Long,
         val divisor: Int,
         private val divisibleTarget: Int,
@@ -92,12 +90,3 @@ class Day11 : Day(11) {
         }
     }
 }
-
-fun greatestCommonDivisor(a: Int, b: Int): Int =
-    when {
-        b == 0 -> a
-        else -> greatestCommonDivisor(b, a % b)
-    }
-
-fun lowestCommonMultiple(a: Int, b: Int): Int =
-    (a * b) / greatestCommonDivisor(a, b)
