@@ -14,6 +14,13 @@ data class Point(
     private fun move(dX: Int, dY: Int) = Point(x + dX, y + dY)
 
     fun neighbours(other: Point) = abs(other.x - x) <= 1 && abs(other.y - y) <= 1
+
+    fun orthogonalNeighbours(): List<Point> = listOf(
+        Point(x - 1, y),
+        Point(x + 1, y),
+        Point(x, y - 1),
+        Point(x, y + 1),
+    )
 }
 
 enum class Direction(val dX: Int, val dY: Int) {
