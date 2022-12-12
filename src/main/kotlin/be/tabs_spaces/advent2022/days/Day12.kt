@@ -61,7 +61,7 @@ class Day12 : Day(12) {
             return parent.pathLengthFor(current)
         }
 
-        private fun MutableMap<Point, Point>.pathLengthFor(
+        private fun Map<Point, Point>.pathLengthFor(
             start: Point?
         ) = start
             ?.takeIf { it == end }
