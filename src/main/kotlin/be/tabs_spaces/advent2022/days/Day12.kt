@@ -10,9 +10,7 @@ class Day12 : Day(12) {
 
     override fun partOne() = hill.climb(hill.start)
 
-    override fun partTwo(): Any {
-        return hill.climb(Point(0, 5))
-    }
+    override fun partTwo() = hill.shortestRoute()
 
     private class Hill(
         val start: Point,
@@ -36,38 +34,45 @@ class Day12 : Day(12) {
             }
         }
 
+        fun shortestRoute() = heightMap
+            .filter { it.value == 0 }
+            .keys
+            .minOf { climb(it) }
+
         fun climb(start: Point): Int {
             val steps = mutableMapOf<Point, Int>().apply { put(start, 0) }
             val queue = LinkedList<Point>().apply { add(start) }
             val parent = mutableMapOf<Point, Point>()
 
-            var current: Point
-            while (queue.poll().let { current = it; it != end }) {
-                current.orthogonalNeighbours()
+            var current: Point?
+            while (queue.poll().let { current = it; it != null && it != end }) {
+                current!!.orthogonalNeighbours()
                     .filter { it in heightMap.keys }
-                    .filter { heightMap.getValue(it) <= heightMap.getValue(current) + 1 }
+                    .filter { heightMap.getValue(it) <= heightMap.getValue(current!!) + 1 }
                     .forEach { neighbour ->
-                        val stepsToNeighbour = steps.getValue(current) + 1
+                        val stepsToNeighbour = steps.getValue(current!!) + 1
                         if (stepsToNeighbour < steps.getOrDefault(neighbour, Int.MAX_VALUE)) {
                             steps[neighbour] = stepsToNeighbour
-                            parent[neighbour] = current
+                            parent[neighbour] = current!!
                             queue.add(neighbour)
                         }
                     }
             }
-
-            val path = mutableListOf<Point>()
-            while (parent.containsKey(current)) {
-                path.add(current)
-                current = parent.getValue(current)
-            }
-            return path.size
+            return parent.pathLengthFor(current)
         }
 
-        fun shortestRoute() = heightMap
-            .filter { it.value == 0 }
-            .keys
-            .map { println(it); climb(it) }
-            .min()
+        private fun MutableMap<Point, Point>.pathLengthFor(
+            start: Point?
+        ) = start
+            ?.takeIf { it == end }
+            ?.let {
+                var current = it
+                val path = mutableListOf<Point>()
+                while (containsKey(current)) {
+                    path.add(current)
+                    current = getValue(current)
+                }
+                path.size
+            } ?: Int.MAX_VALUE
     }
 }
