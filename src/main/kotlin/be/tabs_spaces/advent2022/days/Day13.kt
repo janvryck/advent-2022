@@ -21,12 +21,25 @@ class Day13 : Day(13) {
         .sumOf { (idx, _) -> idx }
 
     override fun partTwo(): Any {
-        return -1
+        val dividerPackets = listOf(
+            ListValue(listOf(ListValue(listOf(LiteralValue(2))))),
+            ListValue(listOf(ListValue(listOf(LiteralValue(6))))),
+        )
+        return packets
+            .flatMap { listOf(it.first, it.second) }
+            .toMutableList()
+            .apply { addAll(dividerPackets) }
+            .sorted()
+            .mapIndexed { idx, packet -> idx + 1 to packet }
+            .toMap()
+            .filterValues { it in dividerPackets }
+            .keys.toList()
+            .let { (first, second) -> first * second }
     }
 
     class Packet(left: String, right: String) {
-        private val first = left.toValue()
-        private val second = right.toValue()
+        val first = left.toValue()
+        val second = right.toValue()
 
         private fun String.toValue(): Value = this.toJson()
             .jsonArray
@@ -43,17 +56,13 @@ class Day13 : Day(13) {
         fun inOrder() = first < second
     }
 
-    interface Value {
-        operator fun compareTo(other: Value): Int
-    }
+    interface Value : Comparable<Value>
 
     @JvmInline
-    value class ListValue(val values: List<Value>) : Value {
-        override fun compareTo(other: Value): Int {
-            return when (other) {
-                is ListValue -> compareTo(other)
-                else -> compareTo(ListValue(listOf(other)))
-            }
+    value class ListValue(private val values: List<Value>) : Value {
+        override fun compareTo(other: Value) = when (other) {
+            is ListValue -> compareTo(other)
+            else -> compareTo(ListValue(listOf(other)))
         }
 
         private fun compareTo(other: ListValue): Int {
@@ -64,15 +73,17 @@ class Day13 : Day(13) {
             }
             return values.size.compareTo(other.values.size)
         }
+
+        override fun toString() = "$values"
     }
 
     @JvmInline
     value class LiteralValue(val value: Int) : Value {
-        override fun compareTo(other: Value): Int {
-            return when (other) {
-                is LiteralValue -> this.value.compareTo(other.value)
-                else -> ListValue(listOf(this)).compareTo(other)
-            }
+        override fun compareTo(other: Value) = when (other) {
+            is LiteralValue -> this.value.compareTo(other.value)
+            else -> ListValue(listOf(this)).compareTo(other)
         }
+
+        override fun toString() = "$value"
     }
 }
