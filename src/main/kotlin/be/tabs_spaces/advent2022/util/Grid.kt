@@ -9,6 +9,8 @@ data class Point(
 ) {
     fun move(direction: Direction) = move(direction.dX, direction.dY)
 
+    fun move(direction: Point) = move(direction.x, direction.y)
+
     fun moveTowards(to: Point) = move((to.x - x).sign, (to.y - y).sign)
 
     private fun move(dX: Int, dY: Int) = Point(x + dX, y + dY)
@@ -21,6 +23,16 @@ data class Point(
         Point(x, y - 1),
         Point(x, y + 1),
     )
+
+    companion object {
+        fun parse(point: String) = point.split(",").map { it.toInt() }.let { (x, y) -> Point(x, y) }
+
+        fun Pair<Point, Point>.expand() = if (first.x == second.x) {
+            (minOf(first.y, second.y)..maxOf(first.y, second.y)).map { Point(first.x, it) }
+        } else {
+            (minOf(first.x, second.x)..maxOf(first.x, second.x)).map { Point(it, first.y) }
+        }
+    }
 }
 
 enum class Direction(val dX: Int, val dY: Int) {
